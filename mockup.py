@@ -1,15 +1,37 @@
 import sys
 import time as t
 from PyQt6 import QtCore
-from PyQt6.QtCore import QTimer, Qt, QElapsedTimer
+from PyQt6.QtCore import QTimer, Qt
+from PyQt6.QtGui import QFontMetrics
 from PyQt6.QtWidgets import (
     QMainWindow,
     QApplication,
     QLabel,
     QWidget,
-    QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QTabWidget, QHBoxLayout
-
+    QPushButton,
+    QGridLayout,
+    QVBoxLayout,
+    QTabWidget,
+    QHBoxLayout,
+    QTextEdit, QCheckBox, QLineEdit
 )
+
+
+class TodoLineEdit(QLineEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def enterEvent(self, event):
+        font_metrics = QFontMetrics(self.font())
+        text_width = font_metrics.horizontalAdvance(self.text())
+
+        visible_width = self.rect().width() - 8
+
+        if text_width > visible_width:
+            self.setToolTip(self.text())
+        else:
+            self.setToolTip("")
+
 
 class Clock(QLabel):
     def __init__(self):
@@ -71,7 +93,7 @@ class Stopwatch(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setFixedWidth(300)
+        self.setFixedWidth(400)
         self.move(0, 0)
         self.setStyleSheet("""
         QLabel {
@@ -80,9 +102,12 @@ class MainWindow(QMainWindow):
         """)
         self.header_layout = QVBoxLayout()
         self.layout = QGridLayout()
-        self.layout.setHorizontalSpacing(30)
+        self.layout.setHorizontalSpacing(20)
         self.layout.setVerticalSpacing(10)
 
+        self.todo_layout = QGridLayout()
+        self.todo_layout.setVerticalSpacing(10)
+        self.todo_layout.setHorizontalSpacing(10)
         container = QWidget()
         container.setLayout(self.header_layout)
         self.setCentralWidget(container)
@@ -90,49 +115,54 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Productivity Display")
         self.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint)
+
+        # REMINDER: THESE LINES COMMENTED OUT FOR EASE OF DEVELOPMENT. UNCOMMENT WHEN SUBMITTING
         # self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         self.time_tabs = QTabWidget()
         self.time_tabs.setTabPosition(QTabWidget.TabPosition.North)
+        self.time_tabs.setMaximumHeight(100)
 
         self.clock_tab = QWidget()
         self.clock_layout = QHBoxLayout()
         self.clock_layout.addWidget(Clock(), alignment=Qt.AlignmentFlag.AlignCenter)
         self.clock_tab.setLayout(self.clock_layout)
 
-
-
-
-        # self.stopwatch_layout = QHBoxLayout()
-        # self.stopwatch_layout.addWidget(Stopwatch())
-        # self.stopwatch_tab.setLayout(self.stopwatch_layout)
-
         self.time_tabs.addTab(self.clock_tab, "Clock")
         self.time_tabs.addTab(Stopwatch(), "Stopwatch")
 
-        self.tempwidg = QPushButton("ABC123")
+        self.todo_column = QPushButton("Add To-Do")
+        self.todo_column.clicked.connect(self.add_todo)
 
         self.new_note_button = QPushButton("Add a new note")
         self.new_note_button.clicked.connect(self.add_note)
 
         self.header_layout.addWidget(self.time_tabs)
-        self.layout.addWidget(self.new_note_button, 0, 1)
-        self.layout.addWidget(self.tempwidg, 0, 2)
+        self.layout.addWidget(self.new_note_button, 0, 0)
+        self.layout.addWidget(self.todo_column, 0, 1)
 
         self.header_layout.addLayout(self.layout)
-        self.current_note_row = 2
+        self.layout.addLayout(self.todo_layout, 1, 1, -1, 1)
 
+        self.current_note_row = 1
+        self.current_todo_row = 0
 
 
     def add_note(self):
-        new_note = QLineEdit()
+        new_note = QTextEdit()
         new_note.setPlaceholderText("Type something here...")
-        self.layout.addWidget(new_note, self.current_note_row, 1)
+        self.layout.addWidget(new_note, self.current_note_row, 0)
 
         self.current_note_row += 1
 
+    def add_todo(self):
+        new_checkbox = QCheckBox()
+        new_line = TodoLineEdit()
+        self.todo_layout.addWidget(new_checkbox, self.current_todo_row, 0)
 
+        self.todo_layout.addWidget(new_line, self.current_todo_row, 1)
+        self.current_todo_row += 1
 app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
