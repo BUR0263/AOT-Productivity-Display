@@ -13,25 +13,37 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QTabWidget,
     QHBoxLayout,
-    QTextEdit, QCheckBox, QLineEdit
+    QTextEdit, QCheckBox, QLineEdit, QStackedWidget, QSpinBox
 )
 
 
-class TodoLineEdit(QLineEdit):
+# class TodoLineEdit(QLineEdit):
+#     def __init__(self, parent=None):
+#         super().__init__(parent)
+#
+#     def enterEvent(self, event):
+#         font_metrics = QFontMetrics(self.font())
+#         text_width = font_metrics.horizontalAdvance(self.text())
+#
+#         visible_width = self.rect().width() - 8
+#
+#         if text_width > visible_width:
+#             self.setToolTip(self.text())
+#         else:
+#             self.setToolTip("")
+class NoteTextEdit(QTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setStyleSheet("background-color: rgba(45, 45, 45, 0.2)")
 
-    def enterEvent(self, event):
-        font_metrics = QFontMetrics(self.font())
-        text_width = font_metrics.horizontalAdvance(self.text())
-
-        visible_width = self.rect().width() - 8
-
-        if text_width > visible_width:
-            self.setToolTip(self.text())
-        else:
-            self.setToolTip("")
-
+    def focusOutEvent(self, e):
+        self.setStyleSheet("background-color: rgba(45, 45, 45, 0.2)")
+    def focusInEvent(self, e):
+        self.setStyleSheet("background-color: rgba(45, 45, 45, 1)")
+# class TimerWindow(QWidget):
+#     def __init__(self):
+#         super.__init__()
+#         pass
 
 class Clock(QLabel):
     def __init__(self):
@@ -86,10 +98,15 @@ class Stopwatch(QWidget):
     def reset(self):
         self.time_elapsed = 0
         self.timed.setText("00:00")
+        self.timer.stop()
+        self.is_running = False
+        self.start_button.setText("Start")
     def update_label(self):
         self.time_elapsed += 10
         seconds, ms = divmod(self.time_elapsed, 1000)
         self.timed.setText(f"{seconds:02d}:{ms // 10:02d}")
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -131,6 +148,7 @@ class MainWindow(QMainWindow):
 
         self.time_tabs.addTab(self.clock_tab, "Clock")
         self.time_tabs.addTab(Stopwatch(), "Stopwatch")
+        # self.time_tabs.addTab(TimerWindow(), "Timer")
 
         self.todo_column = QPushButton("Add To-Do")
         self.todo_column.clicked.connect(self.add_todo)
@@ -150,7 +168,7 @@ class MainWindow(QMainWindow):
 
 
     def add_note(self):
-        new_note = QTextEdit()
+        new_note = NoteTextEdit()
         new_note.setPlaceholderText("Type something here...")
         self.layout.addWidget(new_note, self.current_note_row, 0)
 
@@ -158,7 +176,7 @@ class MainWindow(QMainWindow):
 
     def add_todo(self):
         new_checkbox = QCheckBox()
-        new_line = TodoLineEdit()
+        new_line = NoteTextEdit()
         self.todo_layout.addWidget(new_checkbox, self.current_todo_row, 0)
 
         self.todo_layout.addWidget(new_line, self.current_todo_row, 1)
