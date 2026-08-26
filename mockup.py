@@ -1,6 +1,6 @@
 import sys
 import time as t
-from PyQt6 import QtCore
+from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QFontDatabase
 from PyQt6.QtWidgets import (
@@ -16,7 +16,6 @@ from PyQt6.QtWidgets import (
     QTextEdit,
     QCheckBox,
 )
-
 # class TodoLineEdit(QLineEdit):
 #     def __init__(self, parent=None):
 #         super().__init__(parent)
@@ -31,7 +30,6 @@ from PyQt6.QtWidgets import (
 #             self.setToolTip(self.text())
 #         else:
 #             self.setToolTip("")
-
 
 class NoteTextEdit(QTextEdit):
     def __init__(self, parent=None):
@@ -265,6 +263,9 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(container)
 
         self.setWindowTitle("Productivity Display")
+        # Windows is fkn weird, so this app icon doesn't show on the taskbar, I can't figure out how to make it work
+        icon = QtGui.QIcon("./icon.ico")
+        self.setWindowIcon(icon)
         self.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint)
 
         # REMINDER: THESE LINES COMMENTED OUT FOR EASE OF DEVELOPMENT. UNCOMMENT WHEN SUBMITTING
@@ -299,7 +300,7 @@ class MainWindow(QMainWindow):
 
         self.current_note_row = 1
         self.current_todo_row = 0
-
+    
     def add_note(self) -> None:
         new_note = NoteTextEdit()
         new_note.setPlaceholderText("Type something here...")
