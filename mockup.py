@@ -2,7 +2,7 @@ import sys
 import time as t
 from PyQt6 import QtCore
 from PyQt6.QtCore import QTimer, Qt
-from PyQt6.QtGui import QFontMetrics
+from PyQt6.QtGui import QFontDatabase
 from PyQt6.QtWidgets import (
     QMainWindow,
     QApplication,
@@ -13,7 +13,8 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QTabWidget,
     QHBoxLayout,
-    QTextEdit, QCheckBox, QLineEdit, QStackedWidget, QSpinBox
+    QTextEdit,
+    QCheckBox,
 )
 
 
@@ -38,12 +39,16 @@ class NoteTextEdit(QTextEdit):
 
     def focusOutEvent(self, e):
         self.setStyleSheet("background-color: rgba(45, 45, 45, 0.2)")
+
     def focusInEvent(self, e):
         self.setStyleSheet("background-color: rgba(45, 45, 45, 1)")
+
+
 # class TimerWindow(QWidget):
 #     def __init__(self):
 #         super.__init__()
 #         pass
+
 
 class Clock(QLabel):
     def __init__(self):
@@ -54,10 +59,11 @@ class Clock(QLabel):
         self.timer.start(1000)
 
     def update_clock(self):
-            self.setText(self.clock_system())
+        self.setText(self.clock_system())
 
     def clock_system(self):
         return t.strftime("%H:%M:%S")
+
 
 def create_stopwatch_string(h, m, s, ms):
     hours = False
@@ -70,9 +76,10 @@ def create_stopwatch_string(h, m, s, ms):
             string += f"{m:02d}:"
         else:
             string += f"{m}:"
-        
+
     string += f"{s:02d}.{(ms // 10):02d}"
     return string
+
 
 class Stopwatch(QWidget):
     def __init__(self):
@@ -81,8 +88,16 @@ class Stopwatch(QWidget):
         layout.setSpacing(20)
         self.is_running = False
 
-        self.ms, self.current_secs, self.start_secs, self.last_secs = 0, 0, 0, 0
-        
+        (
+            self.ms,
+            self.current_secs,
+            self.start_secs,
+            self.last_secs,
+            self.offset_secs,
+            self.elapsed_secs,
+            self.last_offset_secs,
+        ) = (0, 0, 0, 0, 0, 0, 0)
+
         self.timer = QTimer(self)
         self.timer.setInterval(10)
         self.timer.timeout.connect(self.update_label)
@@ -104,6 +119,7 @@ class Stopwatch(QWidget):
         layout.addWidget(self.restart_button, 1)
 
         self.setLayout(layout)
+
     def control(self):
         if not self.is_running:
             if self.start_secs == 0:
@@ -112,29 +128,49 @@ class Stopwatch(QWidget):
             self.start_button.setText("Stop")
             self.is_running = True
         elif self.is_running:
-            self.timer.stop()
             self.start_button.setText("Start")
             self.is_running = False
+
     def reset(self):
-        self.ms, self.current_secs, self.start_secs, self.last_secs = 0, 0, 0, 0
+        (
+            self.ms,
+            self.current_secs,
+            self.start_secs,
+            self.last_secs,
+            self.offset_secs,
+            self.elapsed_secs,
+            self.last_offset_secs,
+        ) = (0, 0, 0, 0, 0, 0, 0)
         self.timed.setText(self.default_timer_text)
         self.timer.stop()
         self.is_running = False
         self.start_button.setText("Start")
+
     def update_label(self):
         self.ms = (self.ms + 10) % 1000
         self.current_secs = int(t.time())
-        self.elapsed_secs = self.current_secs - self.start_secs
-        
-        secs = self.elapsed_secs % 60
+        if not self.is_running:
+            self.offset_secs = (
+                self.current_secs
+                - self.elapsed_secs
+                - self.start_secs
+                + self.last_offset_secs
+            )
+        else:
+            self.last_offset_secs = self.offset_secs
+            self.elapsed_secs = self.current_secs - self.start_secs
+
+        secs = (self.elapsed_secs - self.offset_secs) % 60
         if self.last_secs != secs:
             # remove any compounding inaccuracy in ms by setting ms to 0 at every change in seconds
             self.ms = 0
+            
         self.last_secs = secs
-        mins = (self.elapsed_secs // 60) % 60
-        hours = (self.elapsed_secs // 3600)
-        
-        self.timed.setText(create_stopwatch_string(hours, mins, secs, self.ms))
+        mins = ((self.elapsed_secs - self.offset_secs) // 60) % 60
+        hours = (self.elapsed_secs - self.offset_secs) // 3600
+
+        if self.is_running:
+            self.timed.setText(create_stopwatch_string(hours, mins, secs, self.ms))
 
 
 class MainWindow(QMainWindow):
@@ -142,9 +178,11 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setFixedWidth(400)
         self.move(0, 0)
+        QFontDatabase.addApplicationFont("LCD5X8H.TTF")
         self.setStyleSheet("""
         QLabel {
-            font: 30pt, "Arial";
+            font-size: 30pt;
+            font-family: LCD5x8H, "Courier New", Courier, monospace;
             }
         """)
         self.header_layout = QVBoxLayout()
@@ -158,7 +196,6 @@ class MainWindow(QMainWindow):
         container = QWidget()
         container.setLayout(self.header_layout)
         self.setCentralWidget(container)
-
 
         self.setWindowTitle("Productivity Display")
         self.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint)
@@ -196,7 +233,6 @@ class MainWindow(QMainWindow):
         self.current_note_row = 1
         self.current_todo_row = 0
 
-
     def add_note(self):
         new_note = NoteTextEdit()
         new_note.setPlaceholderText("Type something here...")
@@ -211,6 +247,8 @@ class MainWindow(QMainWindow):
 
         self.todo_layout.addWidget(new_line, self.current_todo_row, 1)
         self.current_todo_row += 1
+
+
 app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
