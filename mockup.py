@@ -58,6 +58,22 @@ class Clock(QLabel):
 
     def clock_system(self):
         return t.strftime("%H:%M:%S")
+
+def create_stopwatch_string(h, m, s, ms):
+    hours = False
+    string = ""
+    if h:
+        string += f"{h}:"
+        hours = True
+    if m:
+        if hours:
+            string += f"{m:02d}:"
+        else:
+            string += f"{m}:"
+        
+    string += f"{s:02d}.{(ms // 10):02d}"
+    return string
+
 class Stopwatch(QWidget):
     def __init__(self):
         super().__init__()
@@ -65,7 +81,8 @@ class Stopwatch(QWidget):
         layout.setSpacing(20)
         self.is_running = False
 
-        self.time_elapsed = 0
+        self.ms, self.current_secs, self.start_secs, self.last_secs = 0, 0, 0, 0
+        
         self.timer = QTimer(self)
         self.timer.setInterval(10)
         self.timer.timeout.connect(self.update_label)
@@ -73,7 +90,8 @@ class Stopwatch(QWidget):
         self.start_button = QPushButton("Start")
         self.start_button.clicked.connect(self.control)
 
-        self.timed = QLabel("00:00")
+        self.default_timer_text = "00.00"
+        self.timed = QLabel(self.default_timer_text)
 
         self.restart_button = QPushButton("Reset")
         self.restart_button.clicked.connect(self.reset)
@@ -88,6 +106,8 @@ class Stopwatch(QWidget):
         self.setLayout(layout)
     def control(self):
         if not self.is_running:
+            if self.start_secs == 0:
+                self.start_secs = int(t.time())
             self.timer.start()
             self.start_button.setText("Stop")
             self.is_running = True
@@ -96,15 +116,25 @@ class Stopwatch(QWidget):
             self.start_button.setText("Start")
             self.is_running = False
     def reset(self):
-        self.time_elapsed = 0
-        self.timed.setText("00:00")
+        self.ms, self.current_secs, self.start_secs, self.last_secs = 0, 0, 0, 0
+        self.timed.setText(self.default_timer_text)
         self.timer.stop()
         self.is_running = False
         self.start_button.setText("Start")
     def update_label(self):
-        self.time_elapsed += 10
-        seconds, ms = divmod(self.time_elapsed, 1000)
-        self.timed.setText(f"{seconds:02d}:{ms // 10:02d}")
+        self.ms = (self.ms + 10) % 1000
+        self.current_secs = int(t.time())
+        self.elapsed_secs = self.current_secs - self.start_secs
+        
+        secs = self.elapsed_secs % 60
+        if self.last_secs != secs:
+            # remove any compounding inaccuracy in ms by setting ms to 0 at every change in seconds
+            self.ms = 0
+        self.last_secs = secs
+        mins = (self.elapsed_secs // 60) % 60
+        hours = (self.elapsed_secs // 3600)
+        
+        self.timed.setText(create_stopwatch_string(hours, mins, secs, self.ms))
 
 
 class MainWindow(QMainWindow):
