@@ -245,7 +245,7 @@ class MainWindow(QMainWindow):
         # otherwise, it the font isn't installed to system or present at project root,
         # this css will fallback to a bunch of other likely monospace fonts, ranked preferentially.
         self.setStyleSheet("""
-        QLabel {
+        Stopwatch QLabel, Clock {
             font-size: 30pt;
             font-family: LCD5x8H, Consolas, "Cascadia Code", "Cascadia Mono", Inconsolata, "Lucida Console", "Courier New", Courier, monospace;
             }
