@@ -88,12 +88,17 @@ def create_stopwatch_string(h: int, m: int, s: int, ms: int) -> str:
         string += f"{h}:"
         hours = True
     if m:
+        # if there are hours, use trailing zeros on seconds
         if hours:
             string += f"{m:02d}:"
         else:
             string += f"{m}:"
-
-    string += f"{s:02d}.{(ms // 10):02d}"
+    # remove ms to make room for hours
+    if hours:
+        string += f"{s:02d}"
+    else:
+        string += f"{s:02d}.{(ms // 10):02d}"
+        
     return string
 
 
