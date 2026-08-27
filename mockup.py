@@ -209,7 +209,7 @@ class Stopwatch(QWidget):
         if self.is_running:
             self.timed.setText(self.create_stopwatch_string(hours, mins, secs, self.ms))
             
-    def create_stopwatch_string(h: int, m: int, s: int, ms: int) -> str:
+    def create_stopwatch_string(self, h: int, m: int, s: int, ms: int) -> str:
         """takes 4 ints; hours, minutes, seconds, and milliseconds, and formats them into an appropriate string for display
 
         Args:
@@ -296,6 +296,7 @@ class MainWindow(QMainWindow):
 
         self.time_tabs.addTab(self.clock_tab, "Clock")
         self.time_tabs.addTab(Stopwatch(), "Stopwatch")
+
 
         self.add_todo_button = QPushButton("Add To-Do")
         self.add_todo_button.clicked.connect(self.add_todo)
