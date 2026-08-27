@@ -15,6 +15,7 @@ Description:
 # Imports
 import sys
 import time as t
+import json
 from typing import NoReturn
 
 # PyQT6 Imports
@@ -57,7 +58,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Productivity Display")
         ## Windows is fkn weird, so this app icon doesn't show on the taskbar, I can't figure out how to make it work tho
         ## FIXME: taskbar icon doesn't show
-        icon = QIcon("./icon.ico")
+        icon = QIcon("./icons/icon.ico")
         self.setWindowIcon(icon)
 
         # set the window "Always on Top"
@@ -75,41 +76,41 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         # add widgets to layout
-        layout.addWidget(clock_display())
-        layout.addWidget(note())
+        layout.addWidget(clock_display(), alignment=Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(notes(), alignment=Qt.AlignmentFlag.AlignTop)
 
         # create a widget, set its layout to the main layout, and place it in the centre of the main widget
         widget = QWidget()
         widget.setLayout(layout)
-        self.setCentralWidget(widget)    
+        self.setCentralWidget(widget)
 
 
 def set_window_to_min_height() -> None:
     """A function that when called sets the window,
-    assuming it exists as a global variable named "window", 
+    assuming it exists as a global variable named "window",
     to it's minimum height and returns None
     """
     if "window" in globals() and type(window) == MainWindow:
         # set max height to an arbitrarily large number, in this case, the max value allowed without errors
         # we do to practically "unset" the max height before measuring the min,
-        # because if min wants to be larger than max, but max is set, the min height will be as large as 
+        # because if min wants to be larger than max, but max is set, the min height will be as large as
         # possible without exceeding the max, and thus measuring it won't yield anything useful
-        window.setMaximumHeight(16777215)    
-        height = window.minimumHeight()
-        print(f"{t.strftime("%H:%M:%S")} resetting size {height}")
-            
-        window.setMaximumHeight(height)
+        window.setMaximumHeight(16777215)
+        window.setMaximumHeight(window.minimumHeight())
+        # FIXME: window height and widget position is glitchy
+        # whenever a note is deleted, we call this function to resize the window, but for some reason,
+        # it doesn't resize to the minimum like we'd like it to, which causes problems.
 
 
 class clock_display(QWidget):
     def __init__(self) -> None:
         super().__init__()
-
         layout = QVBoxLayout(self)
+        
         self.time_tabs = QTabWidget()
         self.time_tabs.setTabPosition(QTabWidget.TabPosition.North)
         self.time_tabs.setFixedHeight(100)
-        
+
         self.time_tabs.addTab(Clock(), "Clock")
         self.time_tabs.addTab(Stopwatch(), "Stopwatch")
 
@@ -244,6 +245,18 @@ class Stopwatch(QWidget):
         # we can't just sleep 9ms and count on 1ms of logic, as this logic will run faster or slower on different machines.
 
         # this function called every 10ms, so add 10 to ms every 10(ish)ms
+
+        # FIXME: flawed stopwatch logic.
+        # stopwatch logic is flawed it forces itself to be in sync with system seconds. The ideal logic would be as follows.
+        # wait 10ms, advance the stopwatch by 10ms, while doing this measure how long it actually took to do that,
+        # and then adjust the next period to take that into account that difference.
+        # Ie if waiting 10 ms and advancing the timer actually took 10.5ms,
+        # the next period should wait for 2*10-10.5 or 9.5ms to account for that disparity.
+        #   (desired time - time difference)
+        #   (desired time - (actual time - desired time))
+        # simplifies to:
+        #   (2 * desired time - actual time)
+
         self.ms = (self.ms + 10) % 1000
 
         # find out what time were currently at
@@ -319,37 +332,85 @@ class notes_and_todos(QWidget):
     pass
 
 
-class notes:
-    pass
+class notes(QWidget):
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout()
+        new_note_button = QPushButton()
+        new_note_button.setText("Add New Note")
+        new_note_button.clicked.connect(self.create_new_note)
+
+        layout.addWidget(new_note_button)
+
+        self.setLayout(layout)
+
+    def create_new_note(self):
+        self.layout().addWidget(note())
 
 
-class note(QTextEdit):
-    def __init__(self) -> None:
+class note(QWidget):
+    def __init__(self, text: str = "") -> None:
         super().__init__()
 
-        self.text = ""
+        layout = QGridLayout()
 
-        self.setText(self.text)
-        self.setPlaceholderText("Start typing here...")
-        self.calculate_size()
+        self.text_edit = QTextEdit()
+        self.text = text
 
-        self.textChanged.connect(self.calculate_size)
+        self.text_edit.setText(self.text)
+        self.text_edit.setPlaceholderText("Start typing here...")
 
-    def calculate_size(self) -> None:
+        # update the note without saving
+        self.text = self.text_edit.toPlainText()
+
+        ## define the font used, this must be changed if we use a different font
+        font = self.text_edit.document().defaultFont()
+        ## get details on that font
+        fontMetrics = QFontMetrics(font)
+        textSize = fontMetrics.size(0, self.text)
+
+        ## this constant (+ c) may need to be tweaked to define the size of one line
+        textHeight = textSize.height() + 34
+
+        ## set the widget and then the window to their minimum heights
+        self.setFixedHeight(textHeight)
+        set_window_to_min_height()
+
+        # connect text changes to note update function
+        self.text_edit.textChanged.connect(self.update_note)
+
+        # add delete button
+        delete_icon = QIcon("./icons/delete.svg")
+        self.delete_button = QPushButton()
+        self.delete_button.setIcon(delete_icon)
+        self.delete_button.setFixedSize(QSize(20, 20))
+        self.delete_button.clicked.connect(self.delete_note)
+
+        # add everything to layout
+        layout.addWidget(self.delete_button, 0, 0)
+        layout.addWidget(self.text_edit, 0, 1)
+
+        self.setLayout(layout)
+
+    def update_note(self) -> None:
         # get the text content of the widget
-        self.text = self.toPlainText()
+        self.text = self.text_edit.toPlainText()
 
         # define the font used, this must be changed if we use a different font
-        font = self.document().defaultFont()
+        font = self.text_edit.document().defaultFont()
         # get details on that font
         fontMetrics = QFontMetrics(font)
         textSize = fontMetrics.size(0, self.text)
 
         # this constant (+ c) may need to be tweaked to define the size of one line
-        textHeight = textSize.height() + 20
+        textHeight = textSize.height() + 34
 
         # set the widget and then the window to their minimum heights
         self.setFixedHeight(textHeight)
+        set_window_to_min_height()
+
+    def delete_note(self) -> None:
+        self.deleteLater()
         set_window_to_min_height()
 
 
@@ -385,8 +446,7 @@ class todo:
 if __name__ == "__main__":
     # define the app and pass any command line arguments
     app = QApplication(sys.argv)
-    # define the window as a global var from the mainwindow class and show it
-    global window
+    # define and show window
     window = MainWindow()
     window.show()
     # execute the app
