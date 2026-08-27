@@ -73,8 +73,8 @@ class MainWindow(QMainWindow):
         # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         
-        # add a title bar
-        self.title_bar = CustomTitleBar(self)
+        # TODO: add a title bar
+        # self.title_bar = CustomTitleBar(self)
 
         # define base layout
         layout = QVBoxLayout()
@@ -85,30 +85,30 @@ class MainWindow(QMainWindow):
         for w in widgets:
             layout.addWidget(w())
             
-    def minimise(self) -> None:
-        self.showMinimized
+
             
 
+# Unable to get custom title bar working as of now
 
-class CustomTitleBar(QWidget):
-    def __init__(self, parent):
-        super().__init__(parent)
+# class CustomTitleBar(QWidget):
+#     def __init__(self, parent):
+#         super().__init__(parent)
         
-        self.layout = QHBoxLayout()
+#         self.layout = QHBoxLayout()
         
-        exit_button = QPushButton("X", self)
-        exit_button.clicked.connect(self.quit_program)
-        self.layout.addWidget(exit_button)
+#         exit_button = QPushButton("X", self)
+#         exit_button.clicked.connect(self.quit_program)
+#         self.layout.addWidget(exit_button)
         
-        min_button = QPushButton("-", self)
-        min_button.clicked.connect(parent.minimise)
-        self.layout.addWidget(min_button)
+#         min_button = QPushButton("-", self)
+#         min_button.clicked.connect(parent.minimise)
+#         self.layout.addWidget(min_button)
 
 
 
-    def quit_program(exit_code: int = 0) -> NoReturn:
-        QApplication.quit()
-        sys.exit(exit_code)
+#     def quit_program(exit_code: int = 0) -> NoReturn:
+#         QApplication.quit()
+#         sys.exit(exit_code)
 
 
 if __name__ == "__main__":

@@ -15,13 +15,12 @@ from PyQt6.QtWidgets import (
     QTextEdit,
     QCheckBox,
     QMenuBar,
-    QMenu
+    QMenu,
 )
 
-<<<<<<< HEAD
-=======
 note_list = []
->>>>>>> 01a355087273031fb4b607b443f8dbaf2ccc7a1a
+
+
 # class TodoLineEdit(QLineEdit):
 #     def __init__(self, parent=None):
 #         super().__init__(parent)
@@ -57,17 +56,7 @@ class NoteTextEdit(QTextEdit):
     def focusInEvent(self, e):
         self.setStyleSheet("background-color: rgba(45, 45, 45, 1)")
 
-<<<<<<< HEAD
 
-
-# class TimerWindow(QWidget):
-#     def __init__(self):
-#         super.__init__()
-#         pass
-
-
-=======
->>>>>>> 01a355087273031fb4b607b443f8dbaf2ccc7a1a
 class Clock(QLabel):
     def __init__(self) -> None:
         super().__init__()
@@ -115,7 +104,7 @@ def create_stopwatch_string(h: int, m: int, s: int, ms: int) -> str:
         string += f"{s:02d}"
     else:
         string += f"{s:02d}.{(ms // 10):02d}"
-        
+
     return string
 
 
@@ -326,14 +315,10 @@ class MainWindow(QMainWindow):
 
         self.current_note_row = 0
         self.current_todo_row = 0
-    
+
     def add_note(self) -> None:
         new_note = NoteTextEdit()
-<<<<<<< HEAD
-        self.layout.addWidget(new_note, self.current_note_row, 0)
-=======
         new_note.setPlaceholderText("Type something here...")
->>>>>>> 01a355087273031fb4b607b443f8dbaf2ccc7a1a
 
         remove_button = RemoveButton()
         remove_button.clicked.connect(self.remove_note)
@@ -344,7 +329,6 @@ class MainWindow(QMainWindow):
         note_list.append(new_note)
         self.current_note_row += 1
 
-
     def add_todo(self) -> None:
         new_checkbox = QCheckBox()
         new_line = NoteTextEdit()
@@ -353,23 +337,24 @@ class MainWindow(QMainWindow):
         self.todo_layout.addWidget(new_line, self.current_todo_row, 1)
         self.current_todo_row += 1
 
-<<<<<<< HEAD
-=======
     def remove_note(self) -> None:
         button_pressed = self.sender()
         index = self.note_layout.indexOf(button_pressed)
         row, _, _, _ = self.note_layout.getItemPosition(index)
 
-        for i in reversed(range(self.note_layout.count())):
-            r, _, _, _ = self.layout.getItemPosition(i)
-            if r == row:
-                item = self.note_layout.takeAt(i)
-                widget = item.widget()
-                if widget:
-                    widget.deleteLater()
+
+
+        # for i in reversed(range(self.note_layout.count())):
+        #     r, _, _, _ = self.layout.getItemPosition(i)
+        #     if r == row:
+        #         item = self.note_layout.takeAt(i)
+        #         widget = item.widget()
+        #         if widget:
+        #             widget.deleteLater()
         self.current_note_row -= 1
         print(row)
->>>>>>> 01a355087273031fb4b607b443f8dbaf2ccc7a1a
+
+
 app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
