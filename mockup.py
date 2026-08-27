@@ -18,6 +18,10 @@ from PyQt6.QtWidgets import (
     QMenu
 )
 
+<<<<<<< HEAD
+=======
+note_list = []
+>>>>>>> 01a355087273031fb4b607b443f8dbaf2ccc7a1a
 # class TodoLineEdit(QLineEdit):
 #     def __init__(self, parent=None):
 #         super().__init__(parent)
@@ -32,6 +36,14 @@ from PyQt6.QtWidgets import (
 #             self.setToolTip(self.text())
 #         else:
 #             self.setToolTip("")
+class RemoveButton(QPushButton):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setStyleSheet("color: red")
+        self.setText("X")
+        self.setMaximumWidth(20)
+
 
 class NoteTextEdit(QTextEdit):
     def __init__(self, parent=None):
@@ -45,6 +57,7 @@ class NoteTextEdit(QTextEdit):
     def focusInEvent(self, e):
         self.setStyleSheet("background-color: rgba(45, 45, 45, 1)")
 
+<<<<<<< HEAD
 
 
 # class TimerWindow(QWidget):
@@ -53,6 +66,8 @@ class NoteTextEdit(QTextEdit):
 #         pass
 
 
+=======
+>>>>>>> 01a355087273031fb4b607b443f8dbaf2ccc7a1a
 class Clock(QLabel):
     def __init__(self) -> None:
         super().__init__()
@@ -254,7 +269,9 @@ class MainWindow(QMainWindow):
             font-family: LCD5x8H, Consolas, "Cascadia Code", "Cascadia Mono", Inconsolata, "Lucida Console", "Courier New", Courier, monospace;
             }
         """)
+        # header_layout holds the clock tabs and layouts and holds the note functions fixed underneath
         self.header_layout = QVBoxLayout()
+        # this layout holds two other layouts underneath the two 'add' buttons to give flexibility to the overall look of the program
         self.layout = QGridLayout()
         self.layout.setHorizontalSpacing(20)
         self.layout.setVerticalSpacing(10)
@@ -262,6 +279,11 @@ class MainWindow(QMainWindow):
         self.todo_layout = QGridLayout()
         self.todo_layout.setVerticalSpacing(10)
         self.todo_layout.setHorizontalSpacing(10)
+
+        self.note_layout = QGridLayout()
+        self.note_layout.setVerticalSpacing(10)
+        self.note_layout.setHorizontalSpacing(10)
+
         container = QWidget()
         container.setLayout(self.header_layout)
         self.setCentralWidget(container)
@@ -272,7 +294,7 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(icon)
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
 
-        # REMINDER: THESE LINES COMMENTED OUT FOR EASE OF DEVELOPMENT. UNCOMMENT WHEN SUBMITTING
+        #  NOTE: THESE LINES COMMENTED OUT FOR EASE OF DEVELOPMENT. UNCOMMENT WHEN SUBMITTING
         # self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
@@ -287,28 +309,39 @@ class MainWindow(QMainWindow):
 
         self.time_tabs.addTab(self.clock_tab, "Clock")
         self.time_tabs.addTab(Stopwatch(), "Stopwatch")
-        # self.time_tabs.addTab(TimerWindow(), "Timer")
 
-        self.todo_column = QPushButton("Add To-Do")
-        self.todo_column.clicked.connect(self.add_todo)
+        self.add_todo_button = QPushButton("Add To-Do")
+        self.add_todo_button.clicked.connect(self.add_todo)
 
         self.new_note_button = QPushButton("Add a new note")
         self.new_note_button.clicked.connect(self.add_note)
 
         self.header_layout.addWidget(self.time_tabs)
         self.layout.addWidget(self.new_note_button, 0, 0)
-        self.layout.addWidget(self.todo_column, 0, 1)
+        self.layout.addWidget(self.add_todo_button, 0, 1)
 
         self.header_layout.addLayout(self.layout)
         self.layout.addLayout(self.todo_layout, 1, 1, -1, 1)
+        self.layout.addLayout(self.note_layout, 1, 0, -1, 1)
 
-        self.current_note_row = 1
+        self.current_note_row = 0
         self.current_todo_row = 0
     
     def add_note(self) -> None:
         new_note = NoteTextEdit()
+<<<<<<< HEAD
         self.layout.addWidget(new_note, self.current_note_row, 0)
+=======
+        new_note.setPlaceholderText("Type something here...")
+>>>>>>> 01a355087273031fb4b607b443f8dbaf2ccc7a1a
 
+        remove_button = RemoveButton()
+        remove_button.clicked.connect(self.remove_note)
+        self.note_layout.addWidget(new_note, self.current_note_row, 1)
+        self.note_layout.addWidget(remove_button, self.current_note_row, 0)
+
+        note_list.append(remove_button)
+        note_list.append(new_note)
         self.current_note_row += 1
 
 
@@ -320,6 +353,23 @@ class MainWindow(QMainWindow):
         self.todo_layout.addWidget(new_line, self.current_todo_row, 1)
         self.current_todo_row += 1
 
+<<<<<<< HEAD
+=======
+    def remove_note(self) -> None:
+        button_pressed = self.sender()
+        index = self.note_layout.indexOf(button_pressed)
+        row, _, _, _ = self.note_layout.getItemPosition(index)
+
+        for i in reversed(range(self.note_layout.count())):
+            r, _, _, _ = self.layout.getItemPosition(i)
+            if r == row:
+                item = self.note_layout.takeAt(i)
+                widget = item.widget()
+                if widget:
+                    widget.deleteLater()
+        self.current_note_row -= 1
+        print(row)
+>>>>>>> 01a355087273031fb4b607b443f8dbaf2ccc7a1a
 app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
