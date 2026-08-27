@@ -1,8 +1,7 @@
 import sys
 import time as t
-from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import QTimer, Qt
-from PyQt6.QtGui import QFontDatabase
+from PyQt6.QtGui import QFontDatabase, QIcon
 from PyQt6.QtWidgets import (
     QMainWindow,
     QApplication,
@@ -15,7 +14,10 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QTextEdit,
     QCheckBox,
+    QMenuBar,
+    QMenu
 )
+
 # class TodoLineEdit(QLineEdit):
 #     def __init__(self, parent=None):
 #         super().__init__(parent)
@@ -35,12 +37,14 @@ class NoteTextEdit(QTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setStyleSheet("background-color: rgba(45, 45, 45, 0.2)")
+        self.setPlaceholderText("Type something here...")
 
     def focusOutEvent(self, e):
         self.setStyleSheet("background-color: rgba(45, 45, 45, 0.2)")
 
     def focusInEvent(self, e):
         self.setStyleSheet("background-color: rgba(45, 45, 45, 1)")
+
 
 
 # class TimerWindow(QWidget):
@@ -264,9 +268,9 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Productivity Display")
         # Windows is fkn weird, so this app icon doesn't show on the taskbar, I can't figure out how to make it work
-        icon = QtGui.QIcon("./icon.ico")
+        icon = QIcon("./icon.ico")
         self.setWindowIcon(icon)
-        self.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
 
         # REMINDER: THESE LINES COMMENTED OUT FOR EASE OF DEVELOPMENT. UNCOMMENT WHEN SUBMITTING
         # self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
@@ -303,10 +307,10 @@ class MainWindow(QMainWindow):
     
     def add_note(self) -> None:
         new_note = NoteTextEdit()
-        new_note.setPlaceholderText("Type something here...")
         self.layout.addWidget(new_note, self.current_note_row, 0)
 
         self.current_note_row += 1
+
 
     def add_todo(self) -> None:
         new_checkbox = QCheckBox()
@@ -315,7 +319,6 @@ class MainWindow(QMainWindow):
 
         self.todo_layout.addWidget(new_line, self.current_todo_row, 1)
         self.current_todo_row += 1
-
 
 app = QApplication(sys.argv)
 window = MainWindow()
