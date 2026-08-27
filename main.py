@@ -109,7 +109,6 @@ class clock_display(QWidget):
     def __init__(self) -> None:
         super().__init__()
         layout = QVBoxLayout(self)
-
         self.time_tabs = QTabWidget()
         self.time_tabs.setTabPosition(QTabWidget.TabPosition.North)
         self.time_tabs.setFixedHeight(100)
