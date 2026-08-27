@@ -75,39 +75,6 @@ class Clock(QLabel):
         # <hours>:<minutes>:<seconds>
         return t.strftime("%H:%M:%S")
 
-
-def create_stopwatch_string(h: int, m: int, s: int, ms: int) -> str:
-    """takes 4 ints; hours, minutes, seconds, and milliseconds, and formats them into an appropriate string for display
-
-    Args:
-        h (int): Hours
-        m (int): Minutes
-        s (int): Seconds
-        ms (int): Milliseconds
-
-    Returns:
-        str: A user friendly formatted string
-    """
-    hours = False
-    string = ""
-    if h:
-        string += f"{h}:"
-        hours = True
-    if m:
-        # if there are hours, use trailing zeros on seconds
-        if hours:
-            string += f"{m:02d}:"
-        else:
-            string += f"{m}:"
-    # remove ms to make room for hours
-    if hours:
-        string += f"{s:02d}"
-    else:
-        string += f"{s:02d}.{(ms // 10):02d}"
-
-    return string
-
-
 class Stopwatch(QWidget):
     def __init__(self) -> None:
         super().__init__()
@@ -240,7 +207,38 @@ class Stopwatch(QWidget):
 
         # only update stopwatch if it's running
         if self.is_running:
-            self.timed.setText(create_stopwatch_string(hours, mins, secs, self.ms))
+            self.timed.setText(self.create_stopwatch_string(hours, mins, secs, self.ms))
+            
+    def create_stopwatch_string(h: int, m: int, s: int, ms: int) -> str:
+        """takes 4 ints; hours, minutes, seconds, and milliseconds, and formats them into an appropriate string for display
+
+        Args:
+            h (int): Hours
+            m (int): Minutes
+            s (int): Seconds
+            ms (int): Milliseconds
+
+        Returns:
+            str: A user friendly formatted string
+        """
+        hours = False
+        string = ""
+        if h:
+            string += f"{h}:"
+            hours = True
+        if m:
+            # if there are hours, use trailing zeros on seconds
+            if hours:
+                string += f"{m:02d}:"
+            else:
+                string += f"{m}:"
+        # remove ms to make room for hours
+        if hours:
+            string += f"{s:02d}"
+        else:
+            string += f"{s:02d}.{(ms // 10):02d}"
+
+        return string
 
 
 class MainWindow(QMainWindow):
