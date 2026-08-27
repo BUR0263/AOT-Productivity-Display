@@ -19,7 +19,7 @@ from typing import NoReturn
 
 # PyQT6 Imports
 from PyQt6.QtCore import QTimer, Qt, QCoreApplication, QSize
-from PyQt6.QtGui import QFontDatabase, QIcon, QAction, QPalette
+from PyQt6.QtGui import QFontDatabase, QIcon, QAction, QPalette, QFontMetrics
 
 ## widgets
 from PyQt6.QtWidgets import (
@@ -37,6 +37,7 @@ from PyQt6.QtWidgets import (
     QToolBar,
     QToolButton,
     QWidget,
+    QPlainTextEdit,
 )
 
 ## layouts
@@ -64,8 +65,8 @@ class MainWindow(QMainWindow):
 
         # remove window frame and make window transparent
         # TODO: REMINDER: THESE LINES COMMENTED OUT FOR EASE OF DEVELOPMENT. UNCOMMENT WHEN SUBMITTING
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
+        # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        # self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
 
         # TODO: add a title bar (see commented code below other classes)
         # self.title_bar = CustomTitleBar(self)
@@ -75,30 +76,41 @@ class MainWindow(QMainWindow):
 
         # add widgets to layout
         layout.addWidget(clock_display())
-        layout.addWidget(notes_and_todos())
+        layout.addWidget(note())
 
         # create a widget, set its layout to the main layout, and place it in the centre of the main widget
         widget = QWidget()
         widget.setLayout(layout)
-        self.setCentralWidget(widget)
+        self.setCentralWidget(widget)    
+
+
+def set_window_to_min_height() -> None:
+    """A function that when called sets the window,
+    assuming it exists as a global variable named "window", 
+    to it's minimum height and returns None
+    """
+    if "window" in globals() and type(window) == MainWindow:
+        # set max height to an arbitrarily large number, in this case, the max value allowed without errors
+        # we do to practically "unset" the max height before measuring the min,
+        # because if min wants to be larger than max, but max is set, the min height will be as large as 
+        # possible without exceeding the max, and thus measuring it won't yield anything useful
+        window.setMaximumHeight(16777215)    
+        height = window.minimumHeight()
+        print(f"{t.strftime("%H:%M:%S")} resetting size {height}")
+            
+        window.setMaximumHeight(height)
 
 
 class clock_display(QWidget):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         layout = QVBoxLayout(self)
         self.time_tabs = QTabWidget()
         self.time_tabs.setTabPosition(QTabWidget.TabPosition.North)
-        self.time_tabs.setMaximumHeight(100)
-
-        # self.clock_tab = QWidget()
-        # self.clock_layout = QHBoxLayout()
-        # self.clock_layout.addWidget(Clock(), alignment=Qt.AlignmentFlag.AlignCenter)
-        # self.clock_tab.setLayout(self.clock_layout)
-
+        self.time_tabs.setFixedHeight(100)
+        
         self.time_tabs.addTab(Clock(), "Clock")
-        # self.time_tabs.addTab(self.clock_tab, "Clock")
         self.time_tabs.addTab(Stopwatch(), "Stopwatch")
 
         layout.addWidget(self.time_tabs)
@@ -303,6 +315,52 @@ class Stopwatch(QWidget):
         return string
 
 
+class notes_and_todos(QWidget):
+    pass
+
+
+class notes:
+    pass
+
+
+class note(QTextEdit):
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.text = ""
+
+        self.setText(self.text)
+        self.setPlaceholderText("Start typing here...")
+        self.calculate_size()
+
+        self.textChanged.connect(self.calculate_size)
+
+    def calculate_size(self) -> None:
+        # get the text content of the widget
+        self.text = self.toPlainText()
+
+        # define the font used, this must be changed if we use a different font
+        font = self.document().defaultFont()
+        # get details on that font
+        fontMetrics = QFontMetrics(font)
+        textSize = fontMetrics.size(0, self.text)
+
+        # this constant (+ c) may need to be tweaked to define the size of one line
+        textHeight = textSize.height() + 20
+
+        # set the widget and then the window to their minimum heights
+        self.setFixedHeight(textHeight)
+        set_window_to_min_height()
+
+
+class todos:
+    pass
+
+
+class todo:
+    pass
+
+
 # Unable to get custom title bar working as of now
 
 # class CustomTitleBar(QWidget):
@@ -327,7 +385,8 @@ class Stopwatch(QWidget):
 if __name__ == "__main__":
     # define the app and pass any command line arguments
     app = QApplication(sys.argv)
-    # define the window from the mainwindow class and show it
+    # define the window as a global var from the mainwindow class and show it
+    global window
     window = MainWindow()
     window.show()
     # execute the app
