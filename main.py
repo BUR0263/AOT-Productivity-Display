@@ -63,6 +63,11 @@ class MainWindow(QMainWindow):
 
         # set the window "Always on Top"
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
+        
+        # this adds the following ttf file font to the environment if the file exists
+        QFontDatabase.addApplicationFont("LCD5X8H.TTF")
+        # otherwise, it the font isn't installed to system or present at project root,
+        # the css (or rather qss) will fallback to a bunch of other likely monospace fonts, ranked preferentially.
 
         # TODO: Add a development mode bool flag, and;
         # TODO: check transparent styling to make sure eveything is actually transparent
