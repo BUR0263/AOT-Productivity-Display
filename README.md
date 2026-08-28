@@ -100,7 +100,8 @@ Then run the following commands:
     python main.py
     ```
 
-    Alternatively, to run in development mode, use one of the following:
+    Alternatively, you may want to run in development mode, 
+    which disables window transparency and adds a standard window frame. To do so use one of the following:
 
     ```
     python main.py -d
