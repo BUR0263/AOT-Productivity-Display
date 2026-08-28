@@ -44,6 +44,8 @@ from PyQt6.QtWidgets import (
 ## layouts
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QBoxLayout
 
+# TODO: add styling for transparency and add background contrast detection to make sure stuff is readable
+
 
 class MainWindow(QMainWindow):
     """A class representing the main window and the widgets inside"""
@@ -175,7 +177,10 @@ class Stopwatch(QWidget):
         self.timer.timeout.connect(self.update_label)
 
         # Define a start/stop button for the stopwatch, and connect it to the control function
-        self.start_button = QPushButton("Start")
+        self.start_button = QPushButton()
+        self.start_icon = QIcon("./icons/play.svg")
+        self.stop_icon = QIcon("./icons/pause.svg")
+        self.start_button.setIcon(self.start_icon)
         self.start_button.clicked.connect(self.control)
 
         # define the default "zero" state of the stopwatch
@@ -183,12 +188,14 @@ class Stopwatch(QWidget):
         self.timed = QLabel(self.default_timer_text)
 
         # define a restart button and connect it to the reset function
-        self.restart_button = QPushButton("Reset")
+        reset_icon = QIcon("./icons/refresh.svg")
+        self.restart_button = QPushButton()
+        self.restart_button.setIcon(reset_icon)
         self.restart_button.clicked.connect(self.reset)
 
         # define button sizes
-        self.start_button.setMaximumSize(50, 50)
-        self.restart_button.setMaximumSize(50, 50)
+        self.start_button.setFixedSize(50, 50)
+        self.restart_button.setFixedSize(50, 50)
 
         # add the widgets
         layout.addWidget(self.start_button)
@@ -212,10 +219,10 @@ class Stopwatch(QWidget):
                 # if we didn't do this conditionally, pausing and playing the timer (which calls this function where start secs is already defined) would reset it
                 self.start_secs = int(t.time())
             self.timer.start()
-            self.start_button.setText("Stop")
+            self.start_button.setIcon(self.stop_icon)
             self.is_running = True
         elif self.is_running:
-            self.start_button.setText("Start")
+            self.start_button.setIcon(self.start_icon)
             self.is_running = False
 
     def reset(self) -> None:
@@ -234,7 +241,7 @@ class Stopwatch(QWidget):
         self.timed.setText(self.default_timer_text)
         self.timer.stop()
         self.is_running = False
-        self.start_button.setText("Start")
+        self.start_button.setIcon(self.start_icon)
 
     def update_label(self) -> None:
         # this is the core timer logic
@@ -352,7 +359,7 @@ class notes(QWidget):
         self.setLayout(layout)
 
     def create_new_note(self):
-        self.layout().addWidget(note())
+        self.layout().addWidget(note(""))
 
 
 class note_base(QWidget):
@@ -412,7 +419,7 @@ class note_base(QWidget):
 class note(note_base):
     def __init__(self, text=""):
         super().__init__(text)
-        
+
         layout = QHBoxLayout()
 
         # add delete button
@@ -428,8 +435,12 @@ class note(note_base):
         # add to layout
         layout.addWidget(self.delete_button)
         layout.addWidget(self.note)
-        
-        self.setLayout(layout)
+
+        # I dont know why but this line causes a warning when adding new notes, but commenting it out has no consequences, so...
+        # the warning:
+        #   QWidget::setLayout: Attempting to set QLayout "" on note "", which already has a layout
+
+        # self.setLayout(layout)
 
     def delete_note(self) -> None:
         self.deleteLater()
@@ -438,19 +449,18 @@ class note(note_base):
 
 class todos(QWidget):
     def __init__(self):
-            super().__init__()
-            layout = QVBoxLayout()
-            new_todo_button = QPushButton()
-            new_todo_button.setText("Add New Todo")
-            new_todo_button.clicked.connect(self.create_new_todo)
-    
-            layout.addWidget(new_todo_button)
-    
-            self.setLayout(layout)
-    
+        super().__init__()
+        layout = QVBoxLayout()
+        new_todo_button = QPushButton()
+        new_todo_button.setText("Add New Todo")
+        new_todo_button.clicked.connect(self.create_new_todo)
+
+        layout.addWidget(new_todo_button)
+
+        self.setLayout(layout)
+
     def create_new_todo(self):
         self.layout().addWidget(todo())
-    
 
 
 class todo(QWidget):
@@ -468,9 +478,9 @@ class todo(QWidget):
 
         # add note
         self.note = note_base(text="")
-        
+
         # add check box
-        
+
         self.check_box = QCheckBox(self)
 
         # add to layout
@@ -478,13 +488,11 @@ class todo(QWidget):
         layout.addWidget(self.check_box)
         layout.addWidget(self.note)
 
-        
         self.setLayout(layout)
-    
+
     def delete_todo(self) -> None:
         self.deleteLater()
         set_window_to_min_height()
-        
 
 
 # Unable to get custom title bar working as of now
