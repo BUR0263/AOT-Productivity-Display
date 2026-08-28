@@ -72,10 +72,10 @@ class MainWindow(QMainWindow):
         # TODO: Add a development mode bool flag, and;
         # TODO: check transparent styling to make sure eveything is actually transparent
 
-        # remove window frame and make window transparent
-        # TODO: REMINDER: THESE LINES COMMENTED OUT FOR EASE OF DEVELOPMENT. UNCOMMENT WHEN SUBMITTING
-        # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        # self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
+        # remove window frame and make window transparent (if not in dev mode)
+        if not DEVELOPMENT_MODE:
+            self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+            self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
 
         # TODO: add a title bar (see commented code near bottom of file)
         # self.title_bar = CustomTitleBar(self)
@@ -509,8 +509,13 @@ class todo(QWidget):
 
 
 if __name__ == "__main__":
-    # define the app and pass any command line arguments
-    app = QApplication(sys.argv)
+    # NOTE: If you would like to force development mode, you can change this to True
+    DEVELOPMENT_MODE = False
+    for arg in sys.argv:
+        if arg == "--development-mode" or arg == "-d":
+            DEVELOPMENT_MODE = True
+    # define the app
+    app = QApplication([])
     # define and show window
     window = MainWindow()
     window.show()

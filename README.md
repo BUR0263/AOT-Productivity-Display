@@ -94,7 +94,17 @@ Then run the following commands:
 
     Note: This is not required if you chose to install PyQt6 to your system Python environment. In which case, you may be able to simply double click the main.py file in File Explorer, or right click and "Open with" -> "python"
 
-2. Run the main.py file by running:
+2. Then, run the main.py file:
+    
     ```
     python main.py
+    ```
+
+    Alternatively, to run in development mode, use one of the following:
+
+    ```
+    python main.py -d
+    ```
+    ```
+    python main.py --development-mode
     ```
