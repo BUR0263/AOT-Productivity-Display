@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
 
         # set the window "Always on Top"
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
-        
+
         # this adds the following ttf file font to the environment if the file exists
         QFontDatabase.addApplicationFont("LCD5X8H.TTF")
         # otherwise, it the font isn't installed to system or present at project root,
@@ -71,7 +71,7 @@ class MainWindow(QMainWindow):
 
         # TODO: Add a development mode bool flag, and;
         # TODO: check transparent styling to make sure eveything is actually transparent
-        
+
         # remove window frame and make window transparent
         # TODO: REMINDER: THESE LINES COMMENTED OUT FOR EASE OF DEVELOPMENT. UNCOMMENT WHEN SUBMITTING
         # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -86,6 +86,7 @@ class MainWindow(QMainWindow):
         # add widgets to layout
         layout.addWidget(clock_display(), alignment=Qt.AlignmentFlag.AlignTop)
         layout.addWidget(notes(), alignment=Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(todos(), alignment=Qt.AlignmentFlag.AlignTop)
 
         # create a widget, set its layout to the main layout, and place it in the centre of the main widget
         widget = QWidget()
@@ -354,7 +355,7 @@ class notes(QWidget):
         self.layout().addWidget(note())
 
 
-class note(QWidget):
+class note_base(QWidget):
     def __init__(self, text: str = "") -> None:
         super().__init__()
 
@@ -385,16 +386,8 @@ class note(QWidget):
         # connect text changes to note update function
         self.text_edit.textChanged.connect(self.update_note)
 
-        # add delete button
-        delete_icon = QIcon("./icons/delete.svg")
-        self.delete_button = QPushButton()
-        self.delete_button.setIcon(delete_icon)
-        self.delete_button.setFixedSize(QSize(20, 20))
-        self.delete_button.clicked.connect(self.delete_note)
-
-        # add everything to layout
-        layout.addWidget(self.delete_button, 0, 0)
-        layout.addWidget(self.text_edit, 0, 1)
+        # add to layout
+        layout.addWidget(self.text_edit, 0, 0)
 
         self.setLayout(layout)
 
@@ -415,17 +408,83 @@ class note(QWidget):
         self.setFixedHeight(textHeight)
         set_window_to_min_height()
 
+
+class note(note_base):
+    def __init__(self, text=""):
+        super().__init__(text)
+        
+        layout = QHBoxLayout()
+
+        # add delete button
+        delete_icon = QIcon("./icons/delete.svg")
+        self.delete_button = QPushButton(self)
+        self.delete_button.setIcon(delete_icon)
+        self.delete_button.setFixedSize(QSize(20, 20))
+        self.delete_button.clicked.connect(self.delete_note)
+
+        # add note
+        self.note = note_base(text="")
+
+        # add to layout
+        layout.addWidget(self.delete_button)
+        layout.addWidget(self.note)
+        
+        self.setLayout(layout)
+
     def delete_note(self) -> None:
         self.deleteLater()
         set_window_to_min_height()
 
 
-class todos:
-    pass
+class todos(QWidget):
+    def __init__(self):
+            super().__init__()
+            layout = QVBoxLayout()
+            new_todo_button = QPushButton()
+            new_todo_button.setText("Add New Todo")
+            new_todo_button.clicked.connect(self.create_new_todo)
+    
+            layout.addWidget(new_todo_button)
+    
+            self.setLayout(layout)
+    
+    def create_new_todo(self):
+        self.layout().addWidget(todo())
+    
 
 
-class todo:
-    pass
+class todo(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        layout = QHBoxLayout()
+
+        # add delete button
+        delete_icon = QIcon("./icons/delete.svg")
+        self.delete_button = QPushButton(self)
+        self.delete_button.setIcon(delete_icon)
+        self.delete_button.setFixedSize(QSize(20, 20))
+        self.delete_button.clicked.connect(self.delete_todo)
+
+        # add note
+        self.note = note_base(text="")
+        
+        # add check box
+        
+        self.check_box = QCheckBox(self)
+
+        # add to layout
+        layout.addWidget(self.delete_button)
+        layout.addWidget(self.check_box)
+        layout.addWidget(self.note)
+
+        
+        self.setLayout(layout)
+    
+    def delete_todo(self) -> None:
+        self.deleteLater()
+        set_window_to_min_height()
+        
 
 
 # Unable to get custom title bar working as of now
