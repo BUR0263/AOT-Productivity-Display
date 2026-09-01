@@ -19,8 +19,8 @@ import json
 from typing import NoReturn
 
 # PyQT6 Imports
-from PyQt6.QtCore import QTimer, Qt, QCoreApplication, QSize
-from PyQt6.QtGui import QFontDatabase, QIcon, QAction, QPalette, QFontMetrics
+from PyQt6.QtCore import QTimer, Qt, QSize, QEvent
+from PyQt6.QtGui import QFontDatabase, QIcon, QFontMetrics
 
 ## widgets
 from PyQt6.QtWidgets import (
@@ -39,6 +39,7 @@ from PyQt6.QtWidgets import (
     QToolButton,
     QWidget,
     QPlainTextEdit,
+    QStyle,
 )
 
 ## layouts
@@ -85,10 +86,15 @@ class MainWindow(QMainWindow):
         # define vertical layout
         layout = QVBoxLayout()
 
+        # define title bar variable - won't work without it??
+        self.title_bar = CustomTitleBar(self)
+
         # add widgets to layout
+        layout.addWidget(self.title_bar, alignment=Qt.AlignmentFlag.AlignTop)
         layout.addWidget(clock_display(), alignment=Qt.AlignmentFlag.AlignTop)
         layout.addWidget(notes(), alignment=Qt.AlignmentFlag.AlignTop)
         layout.addWidget(todos(), alignment=Qt.AlignmentFlag.AlignTop)
+
 
         # create a widget, set its layout to the main layout, and place it in the centre of the main widget
         widget = QWidget()
@@ -497,23 +503,74 @@ class todo(QWidget):
 
 # Unable to get custom title bar working as of now
 
-# class CustomTitleBar(QWidget):
-#     def __init__(self, parent):
-#         super().__init__(parent)
+class CustomTitleBar(QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
 
-#         self.layout = QHBoxLayout()
+        # used when moving window around screen
+        self.initial_pos = None
 
-#         exit_button = QPushButton("X", self)
-#         exit_button.clicked.connect(self.quit_program)
-#         self.layout.addWidget(exit_button)
+        # declaring layout for titlebar
+        title_layout = QHBoxLayout(self)
+        title_layout.setContentsMargins(1, 1, 1, 1)
+        title_layout.setSpacing(2)
 
-#         min_button = QPushButton("-", self)
-#         min_button.clicked.connect(parent.minimise)
-#         self.layout.addWidget(min_button)
+        # sets an icon widget
+        # self.icon = QIcon("./icons/icon.ico")
+        # title_layout.addWidget(self.icon)
 
-#     def quit_program(exit_code: int = 0) -> NoReturn:
-#         QApplication.quit()
-#         sys.exit(exit_code)
+        # defining a title for the window
+        self.title = QLabel(f"{self.__class__.__name__}", self)
+        self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # if the window has a title, set the title widget to that title
+        if title := parent.windowTitle():
+            self.title.setText(title)
+        title_layout.addWidget(self.title)
+
+        # MINIMIZE BUTTON
+        self.minimize = QToolButton(self)
+        # Using QStyle's default minimise icon
+        min_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarMinButton)
+        self.minimize.setIcon(min_icon)
+        # when clicked minimize the parent window
+        self.minimize.clicked.connect(self.window().showMinimized)
+
+        # MAXIMIZE BUTTON
+        self.maximize = QToolButton(self)
+        # using QStyle's default maximize icon
+        max_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarMaxButton)
+        self.maximize.setIcon(max_icon)
+        # when clicked maximize the parent window
+        self.maximize.clicked.connect(self.window().showMaximized)
+
+        # EXIT BUTTON
+        self.exit = QToolButton(self)
+        # using QStyle's default close icon
+        exit_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarCloseButton)
+        self.exit.setIcon(exit_icon)
+        # when clicked exit the program
+        self.exit.clicked.connect(self.window().close)
+
+        # NORMAL BUTTON
+        self.normal = QToolButton(self)
+        # using QStyle's default normal icon
+        normal_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarNormalButton)
+        self.normal.setIcon(normal_icon)
+        # when clicked return to normal state
+        self.normal.clicked.connect(self.window().showNormal)
+        self.normal.setVisible(False)
+
+        buttons = [
+            self.minimize,
+            self.normal,
+            self.maximize,
+            self.exit,
+        ]
+        for button in buttons:
+            button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            button.setFixedSize(QSize(28, 28))
+            title_layout.addWidget(button)
 
 
 if __name__ == "__main__":
