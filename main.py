@@ -17,10 +17,11 @@ import sys
 import time as t
 import json
 from typing import NoReturn
+import ctypes
 
 # PyQT6 Imports
 from PyQt6.QtCore import QTimer, Qt, QSize, QEvent
-from PyQt6.QtGui import QFontDatabase, QIcon, QFontMetrics
+from PyQt6.QtGui import QFontDatabase, QIcon, QFontMetrics, QPalette, QPixmap
 
 ## widgets
 from PyQt6.QtWidgets import (
@@ -46,7 +47,6 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QBoxLayout
 
 # TODO: add styling for transparency and add background contrast detection to make sure stuff is readable
-
 
 class MainWindow(QMainWindow):
     """A class representing the main window and the widgets inside"""
@@ -100,7 +100,12 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         widget.setLayout(layout)
         self.setCentralWidget(widget)
-
+    # Tells the titlebar when the window state has been changed, (minimize, maximized
+    def changeEvent(self, event):
+        if event.type() == QEvent.Type.WindowStateChange:
+            self.title_bar.window_state_changed(self.windowState())
+        super().changeEvent(event)
+        event.accept()
 
 def set_window_to_min_height() -> None:
     """A function that when called sets the window,
@@ -515,14 +520,19 @@ class CustomTitleBar(QWidget):
         title_layout.setContentsMargins(1, 1, 1, 1)
         title_layout.setSpacing(2)
 
-        # sets an icon widget
-        # self.icon = QIcon("./icons/icon.ico")
-        # title_layout.addWidget(self.icon)
+        self.setAutoFillBackground(True)
+        self.setBackgroundRole(QPalette.ColorRole.Highlight)
 
         # defining a title for the window
         self.title = QLabel(f"{self.__class__.__name__}", self)
         self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        # defining an icon for thw window
+        self.window_icon_label = QLabel()
+        window_icon = QPixmap("./icons/icon.ico")
+        self.window_icon_label.setContentsMargins(5, 1, 5, 1)
+        self.window_icon_label.setPixmap(window_icon)
+        title_layout.addWidget(self.window_icon_label)
         # if the window has a title, set the title widget to that title
         if title := parent.windowTitle():
             self.title.setText(title)
@@ -561,6 +571,8 @@ class CustomTitleBar(QWidget):
         self.normal.clicked.connect(self.window().showNormal)
         self.normal.setVisible(False)
 
+        # using the list of buttons we make it so it doesn't allow the buttons to take focus
+        # away from other widges, sets their size and adds them to the layout
         buttons = [
             self.minimize,
             self.normal,
@@ -573,6 +585,39 @@ class CustomTitleBar(QWidget):
             title_layout.addWidget(button)
 
 
+    # Let you mazimise the window and then return it to the set state
+    def window_state_changed(self, state):
+        if state == Qt.WindowState.WindowMaximized:
+            self.normal.setVisible(True)
+            self.maximize.setVisible(False)
+        else:
+            self.normal.setVisible(False)
+            self.maximize.setVisible(True)
+    # allows user to move window across screen
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.initial_pos = event.position().toPoint()
+        super().mousePressEvent(event)
+        event.accept()
+
+    def mouseMoveEvent(self, event):
+        if self.initial_pos is not None:
+            delta = event.position().toPoint() - self.initial_pos
+            self.window().move(
+                self.window().x() + delta.x(),
+                self.window().y() + delta.y(),
+            )
+        super().mouseMoveEvent(event)
+        event.accept()
+    # resets the initial position variable so the window moves accurately
+    def mouseReleaseEvent(self, event):
+        self.initial_pos = None
+        super().mouseReleaseEvent(event)
+        event.accept()
+
+# allows custom icon to be shown in taskbar
+myappid = u'AOTDisplay.2026.woah' # arbitrary string
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 if __name__ == "__main__":
     # NOTE: If you would like to force development mode, you can change this to True
     DEVELOPMENT_MODE = False
