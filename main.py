@@ -596,10 +596,12 @@ class CustomTitleBar(QWidget):
         super().mouseReleaseEvent(event)
         event.accept()
 
-# allows custom icon to be shown in taskbar
-myappid = u'AOTDisplay' # arbitrary string
-ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-if __name__ == "__main__":
+
+if __name__ == "__main__":    
+    # allows custom icon to be shown in taskbar
+    myappid = u'AOTDisplay' # arbitrary string
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    
     # NOTE: If you would like to force development mode, you can change this to True
     DEVELOPMENT_MODE = False
     for arg in sys.argv:
