@@ -536,7 +536,7 @@ class CustomTitleBar(QWidget):
         # if the window has a title, set the title widget to that title
         if title := parent.windowTitle():
             self.title.setText(title)
-        title_layout.addWidget(self.title)
+        title_layout.addWidget(self.title, Qt.AlignmentFlag.AlignCenter)
 
         # MINIMIZE BUTTON
         self.minimize = QToolButton(self)
@@ -546,14 +546,6 @@ class CustomTitleBar(QWidget):
         # when clicked minimize the parent window
         self.minimize.clicked.connect(self.window().showMinimized)
 
-        # MAXIMIZE BUTTON
-        self.maximize = QToolButton(self)
-        # using QStyle's default maximize icon
-        max_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarMaxButton)
-        self.maximize.setIcon(max_icon)
-        # when clicked maximize the parent window
-        self.maximize.clicked.connect(self.window().showMaximized)
-
         # EXIT BUTTON
         self.exit = QToolButton(self)
         # using QStyle's default close icon
@@ -562,21 +554,10 @@ class CustomTitleBar(QWidget):
         # when clicked exit the program
         self.exit.clicked.connect(self.window().close)
 
-        # NORMAL BUTTON
-        self.normal = QToolButton(self)
-        # using QStyle's default normal icon
-        normal_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarNormalButton)
-        self.normal.setIcon(normal_icon)
-        # when clicked return to normal state
-        self.normal.clicked.connect(self.window().showNormal)
-        self.normal.setVisible(False)
-
         # using the list of buttons we make it so it doesn't allow the buttons to take focus
         # away from other widges, sets their size and adds them to the layout
         buttons = [
             self.minimize,
-            self.normal,
-            self.maximize,
             self.exit,
         ]
         for button in buttons:
@@ -616,7 +597,7 @@ class CustomTitleBar(QWidget):
         event.accept()
 
 # allows custom icon to be shown in taskbar
-myappid = u'AOTDisplay.2026.woah' # arbitrary string
+myappid = u'AOTDisplay' # arbitrary string
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 if __name__ == "__main__":
     # NOTE: If you would like to force development mode, you can change this to True
