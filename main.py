@@ -17,10 +17,11 @@ import sys
 import time as t
 import json
 from typing import NoReturn
+import ctypes
 
 # PyQT6 Imports
-from PyQt6.QtCore import QTimer, Qt, QCoreApplication, QSize
-from PyQt6.QtGui import QFontDatabase, QIcon, QAction, QPalette, QFontMetrics
+from PyQt6.QtCore import QTimer, Qt, QSize, QEvent
+from PyQt6.QtGui import QFontDatabase, QIcon, QFontMetrics, QPalette, QPixmap
 
 ## widgets
 from PyQt6.QtWidgets import (
@@ -39,13 +40,13 @@ from PyQt6.QtWidgets import (
     QToolButton,
     QWidget,
     QPlainTextEdit,
+    QStyle,
 )
 
 ## layouts
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QBoxLayout
 
 # TODO: add styling for transparency and add background contrast detection to make sure stuff is readable
-
 
 class MainWindow(QMainWindow):
     """A class representing the main window and the widgets inside"""
@@ -85,16 +86,26 @@ class MainWindow(QMainWindow):
         # define vertical layout
         layout = QVBoxLayout()
 
+        # define title bar variable - won't work without it??
+        self.title_bar = CustomTitleBar(self)
+
         # add widgets to layout
+        layout.addWidget(self.title_bar, alignment=Qt.AlignmentFlag.AlignTop)
         layout.addWidget(clock_display(), alignment=Qt.AlignmentFlag.AlignTop)
         layout.addWidget(notes(), alignment=Qt.AlignmentFlag.AlignTop)
         layout.addWidget(todos(), alignment=Qt.AlignmentFlag.AlignTop)
+
 
         # create a widget, set its layout to the main layout, and place it in the centre of the main widget
         widget = QWidget()
         widget.setLayout(layout)
         self.setCentralWidget(widget)
-
+    # Tells the titlebar when the window state has been changed, (minimize, maximized
+    def changeEvent(self, event):
+        if event.type() == QEvent.Type.WindowStateChange:
+            self.title_bar.window_state_changed(self.windowState())
+        super().changeEvent(event)
+        event.accept()
 
 def set_window_to_min_height() -> None:
     """A function that when called sets the window,
@@ -497,25 +508,116 @@ class todo(QWidget):
 
 # Unable to get custom title bar working as of now
 
-# class CustomTitleBar(QWidget):
-#     def __init__(self, parent):
-#         super().__init__(parent)
+class CustomTitleBar(QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
 
-#         self.layout = QHBoxLayout()
+        # used when moving window around screen
+        self.initial_pos = None
 
-#         exit_button = QPushButton("X", self)
-#         exit_button.clicked.connect(self.quit_program)
-#         self.layout.addWidget(exit_button)
+        # declaring layout for titlebar
+        title_layout = QHBoxLayout(self)
+        title_layout.setContentsMargins(1, 1, 1, 1)
+        title_layout.setSpacing(2)
 
-#         min_button = QPushButton("-", self)
-#         min_button.clicked.connect(parent.minimise)
-#         self.layout.addWidget(min_button)
+        self.setAutoFillBackground(True)
+        self.setBackgroundRole(QPalette.ColorRole.Highlight)
 
-#     def quit_program(exit_code: int = 0) -> NoReturn:
-#         QApplication.quit()
-#         sys.exit(exit_code)
+        # defining a title for the window
+        self.title = QLabel(f"{self.__class__.__name__}", self)
+        self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # defining an icon for thw window
+        self.window_icon_label = QLabel()
+        window_icon = QPixmap("./icons/icon.ico")
+        self.window_icon_label.setContentsMargins(5, 1, 5, 1)
+        self.window_icon_label.setPixmap(window_icon)
+        title_layout.addWidget(self.window_icon_label)
+        # if the window has a title, set the title widget to that title
+        if title := parent.windowTitle():
+            self.title.setText(title)
+        title_layout.addWidget(self.title)
+
+        # MINIMIZE BUTTON
+        self.minimize = QToolButton(self)
+        # Using QStyle's default minimise icon
+        min_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarMinButton)
+        self.minimize.setIcon(min_icon)
+        # when clicked minimize the parent window
+        self.minimize.clicked.connect(self.window().showMinimized)
+
+        # MAXIMIZE BUTTON
+        self.maximize = QToolButton(self)
+        # using QStyle's default maximize icon
+        max_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarMaxButton)
+        self.maximize.setIcon(max_icon)
+        # when clicked maximize the parent window
+        self.maximize.clicked.connect(self.window().showMaximized)
+
+        # EXIT BUTTON
+        self.exit = QToolButton(self)
+        # using QStyle's default close icon
+        exit_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarCloseButton)
+        self.exit.setIcon(exit_icon)
+        # when clicked exit the program
+        self.exit.clicked.connect(self.window().close)
+
+        # NORMAL BUTTON
+        self.normal = QToolButton(self)
+        # using QStyle's default normal icon
+        normal_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarNormalButton)
+        self.normal.setIcon(normal_icon)
+        # when clicked return to normal state
+        self.normal.clicked.connect(self.window().showNormal)
+        self.normal.setVisible(False)
+
+        # using the list of buttons we make it so it doesn't allow the buttons to take focus
+        # away from other widges, sets their size and adds them to the layout
+        buttons = [
+            self.minimize,
+            self.normal,
+            self.maximize,
+            self.exit,
+        ]
+        for button in buttons:
+            button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            button.setFixedSize(QSize(28, 28))
+            title_layout.addWidget(button)
 
 
+    # Let you mazimise the window and then return it to the set state
+    def window_state_changed(self, state):
+        if state == Qt.WindowState.WindowMaximized:
+            self.normal.setVisible(True)
+            self.maximize.setVisible(False)
+        else:
+            self.normal.setVisible(False)
+            self.maximize.setVisible(True)
+    # allows user to move window across screen
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.initial_pos = event.position().toPoint()
+        super().mousePressEvent(event)
+        event.accept()
+
+    def mouseMoveEvent(self, event):
+        if self.initial_pos is not None:
+            delta = event.position().toPoint() - self.initial_pos
+            self.window().move(
+                self.window().x() + delta.x(),
+                self.window().y() + delta.y(),
+            )
+        super().mouseMoveEvent(event)
+        event.accept()
+    # resets the initial position variable so the window moves accurately
+    def mouseReleaseEvent(self, event):
+        self.initial_pos = None
+        super().mouseReleaseEvent(event)
+        event.accept()
+
+# allows custom icon to be shown in taskbar
+myappid = u'AOTDisplay.2026.woah' # arbitrary string
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 if __name__ == "__main__":
     # NOTE: If you would like to force development mode, you can change this to True
     DEVELOPMENT_MODE = False
