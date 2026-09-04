@@ -506,8 +506,6 @@ class todo(QWidget):
         set_window_to_min_height()
 
 
-# Unable to get custom title bar working as of now
-
 class CustomTitleBar(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
@@ -603,6 +601,10 @@ if __name__ == "__main__":
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
     
     # NOTE: If you would like to force development mode, you can change this to True
+    # allows custom icon to be shown in taskbar
+    myappid = u'AOTDisplay' # arbitrary string
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    
     DEVELOPMENT_MODE = False
     for arg in sys.argv:
         if arg == "--development-mode" or arg == "-d":
