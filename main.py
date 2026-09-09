@@ -506,8 +506,6 @@ class todo(QWidget):
         set_window_to_min_height()
 
 
-# Unable to get custom title bar working as of now
-
 class CustomTitleBar(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
@@ -565,15 +563,6 @@ class CustomTitleBar(QWidget):
         # when clicked exit the program
         self.exit.clicked.connect(self.window().close)
 
-        # NORMAL BUTTON
-        self.normal = QToolButton(self)
-        # using QStyle's default normal icon
-        normal_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarNormalButton)
-        self.normal.setIcon(normal_icon)
-        # when clicked return to normal state
-        self.normal.clicked.connect(self.window().showNormal)
-        self.normal.setVisible(False)
-
         # using the list of buttons we make it so it doesn't allow the buttons to take focus
         # away from other widges, sets their size and adds them to the layout
         buttons = [
@@ -616,11 +605,17 @@ class CustomTitleBar(QWidget):
         super().mouseReleaseEvent(event)
         event.accept()
 
-# allows custom icon to be shown in taskbar
-myappid = u'AOTDisplay.2026.woah' # arbitrary string
-ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-if __name__ == "__main__":
+
+if __name__ == "__main__":    
+    # allows custom icon to be shown in taskbar
+    myappid = u'AOTDisplay' # arbitrary string
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    
     # NOTE: If you would like to force development mode, you can change this to True
+    # allows custom icon to be shown in taskbar
+    myappid = u'AOTDisplay' # arbitrary string
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    
     DEVELOPMENT_MODE = False
     for arg in sys.argv:
         if arg == "--development-mode" or arg == "-d":
