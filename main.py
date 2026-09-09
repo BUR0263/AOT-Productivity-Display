@@ -536,7 +536,8 @@ class CustomTitleBar(QWidget):
         # if the window has a title, set the title widget to that title
         if title := parent.windowTitle():
             self.title.setText(title)
-        title_layout.addWidget(self.title)
+        title_layout.addWidget(self.title, alignment=Qt.AlignmentFlag.AlignCenter)
+        # TODO: Fix title alignment
 
         # MINIMIZE BUTTON
         self.minimize = QToolButton(self)
@@ -553,6 +554,8 @@ class CustomTitleBar(QWidget):
         self.maximize.setIcon(max_icon)
         # when clicked maximize the parent window
         self.maximize.clicked.connect(self.window().showMaximized)
+        # Hide this fucker
+        self.maximize.setVisible(False)
 
         # EXIT BUTTON
         self.exit = QToolButton(self)
@@ -575,8 +578,6 @@ class CustomTitleBar(QWidget):
         # away from other widges, sets their size and adds them to the layout
         buttons = [
             self.minimize,
-            self.normal,
-            self.maximize,
             self.exit,
         ]
         for button in buttons:
@@ -588,11 +589,11 @@ class CustomTitleBar(QWidget):
     # Let you mazimise the window and then return it to the set state
     def window_state_changed(self, state):
         if state == Qt.WindowState.WindowMaximized:
-            self.normal.setVisible(True)
+            self.normal.setVisible(False)
             self.maximize.setVisible(False)
         else:
             self.normal.setVisible(False)
-            self.maximize.setVisible(True)
+            self.maximize.setVisible(False)
     # allows user to move window across screen
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
